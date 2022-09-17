@@ -14,25 +14,35 @@ def model_params(rf):
 
 
 def prepare_data(df: DataFrame, assembler) -> DataFrame:
-    #TODO Здесь ваш код
+    sex_idx = StringIndexer(inputCol='sex', outputCol='sex_idx')
+    df = sex_idx.fit(df).transform(df)
+    df = df.withColumn('married', df.married.cast(IntegerType()))
     df = assembler.transform(df)
     return df
 
 
 def vector_assembler() -> VectorAssembler:
-    pass #TODO Здесь ваш код
+    features = ['age', 'sex_idx', 'married', 'salary', 'successfully_credit_completed', 'credit_completed_amount', 'active_credits', 'active_credits_amount']
+    return VectorAssembler(inputCols=features, outputCol='features')
 
 
 def build_random_forest() -> RandomForestRegressor:
-    pass #TODO Здесь ваш код
+    return RandomForestRegressor(labelCol='credit_amount', featuresCol='features')
 
 
 def build_evaluator() -> RegressionEvaluator:
-    pass #TODO Здесь ваш код
+    return RegressionEvaluator(
+        labelCol='credit_amount', predictionCol='prediction', metricName='rmse'
+    )
 
 
 def build_tvs(rand_forest, evaluator, model_params) -> TrainValidationSplit:
-    pass #TODO Здесь ваш код
+    return TrainValidationSplit(
+        estimator=rand_forest,
+        estimatorParamMaps=model_params,
+        evaluator=evaluator,
+        trainRatio=0.8
+    )
 
 
 def train_model(train_df, test_df) -> (RandomForestRegressionModel, float):
